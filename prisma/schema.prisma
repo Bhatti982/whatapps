@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ADMIN / RECEPTION USERS ───────────────────────
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(RECEPTION)
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  RECEPTION
+}
+
+model Department {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  doctors Doctor[]
+}
+
+model Doctor {
+  id           Int           @id @default(autoincrement())
+  name         String
+  department   Department    @relation(fields: [departmentId], references: [id])
+  departmentId Int
+  available    Boolean       @default(true)
+  slots        TimeSlot[]
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+}
+
+model TimeSlot {
+  id        Int      @id @default(autoincrement())
+  doctor    Doctor   @relation(fields: [doctorId], references: [id])
+  doctorId  Int
+  day       String
+  startTime String
+  endTime   String
+  isBooked  Boolean  @default(false)
+}
+
+model Patient {
+  id           Int           @id @default(autoincrement())
+  name         String
+  phone        String        @unique
+  language     String        @default("so")
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+}
+
+model Appointment {
+  id             Int               @id @default(autoincrement())
+  patient        Patient           @relation(fields: [patientId], references: [id])
+  patientId      Int
+  doctor         Doctor            @relation(fields: [doctorId], references: [id])
+  doctorId       Int
+  date           DateTime
+  status         AppointmentStatus @default(PENDING)
+  reminder24Sent Boolean           @default(false)
+  reminder2Sent  Boolean           @default(false)
+  notes          String?
+  createdAt      DateTime          @default(now())
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model ChatSession {
+  id        Int      @id @default(autoincrement())
+  phone     String   @unique
+  step      String   @default("WELCOME")
+  data      Json?
+  isHuman   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id       Int    @id @default(autoincrement())
+  question String
+  answer   String
+  keyword  String
+}
